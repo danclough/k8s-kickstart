@@ -1,0 +1,19 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: example-com
+  namespace: default
+spec:
+  secretName: example-com-tls
+  issuerRef:
+    name: letsencrypt-staging
+  commonName: '*.example.com'
+  dnsNames:
+  - example.com
+  acme:
+    config:
+    - dns01:
+        provider: cf-dns
+      domains:
+      - '*.example.com'
+      - example.com

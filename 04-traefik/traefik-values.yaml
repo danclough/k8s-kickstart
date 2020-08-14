@@ -1,0 +1,8 @@
+deployment:
+  replicas: 2
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+dashboard: 
+  enable: true 
+  ingressRoute: false 
