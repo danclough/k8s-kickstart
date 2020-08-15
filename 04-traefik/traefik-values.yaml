@@ -3,6 +3,8 @@ deployment:
 podDisruptionBudget:
   enabled: true
   minAvailable: 2
-dashboard: 
-  enable: true 
-  ingressRoute: false 
+ingressRoute:
+  dashboard:
+    # Disabling automatic creation of dashboard IngressRoute
+    # We will create our own IngressRoute with traefik-dashboard.yaml
+    enabled: false

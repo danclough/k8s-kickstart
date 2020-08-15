@@ -2,13 +2,19 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: dashboard
+  name: traefik-dashboard
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
     - match: Host(`traefik-dashboard.local`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
       kind: Rule
       services:
         - name: api@internal
           kind: TraefikService
+# By default, dashboard will be secured by the internal Traefik self-signed cert.
+# To change this, load a valid certificate in secret form as defined below.
+#  tls:
+#    domains:
+#    - main: traefik-dashboard.local
+#    secretName: traefik-dashboard-tls

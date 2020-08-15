@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  tls.crt: base64-encoded cert here
+  tls.key: base64-encoded key here
+kind: Secret
+metadata:
+  name: traefik-dashboard-tls
+type: kubernetes.io/tls
