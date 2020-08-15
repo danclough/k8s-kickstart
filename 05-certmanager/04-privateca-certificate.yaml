@@ -1,18 +1,40 @@
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
   name: example-com
-  namespace: default
+  namespace: example
 spec:
+  # Secret names are always required.
   secretName: example-com-tls
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  organization:
+  - Example Organization, Inc.
+  # The use of the common name field has been deprecated since 2000 and is
+  # discouraged from being used.
+  commonName: example.com
+  isCA: false
+  keySize: 256
+  keyAlgorithm: ecdsa
+  keyEncoding: pkcs1
+  # Use this if you need to set custom usage types:
+  #usages:
+  #  - server auth
+  #  - client auth
+  # At least one of a DNS Name, URI, or IP address is required.
+  dnsNames:
+  - example.com
+  - www.example.com
+  uriSANs:
+  - spiffe://cluster.local/ns/sandbox/sa/example
+  ipAddresses:
+  - 192.168.0.5
+  # Issuer references are always required.
   issuerRef:
     name: private-ca-issuer
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
-    kind: ClusterIssuer
-  commonName: example.com
-  organization:
-  - Example CA
-  dnsNames:
-  - example.com
-  - www.example.com
+    kind: Issuer
+    # This is optional since cert-manager will default to this value however
+    # if you are using an external issuer, change this to that issuer group.
+    group: cert-manager.io

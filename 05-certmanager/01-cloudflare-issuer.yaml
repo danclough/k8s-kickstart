@@ -1,0 +1,30 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+# If using a ClusterIssuer, modify this
+#kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  # If using a ClusterIssuer, comment this
+  namespace: example
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: user@example.com
+
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging
+
+    solvers:
+    - dns01:
+        cloudflare:
+          email: user@example.com
+          # A secretKeyRef to a cloudflare api token
+          # This secret must exist in the same namespace as the issuer, or in the cert-manager namespace if this is a ClusterIssuer.
+          apiTokenSecretRef:
+            name: cloudflare-api-token
+            key: api-token
+          # If you are using Global API keys instead (which is a bad idea), use this block:
+          #apiKeySecretRef:
+          #  name: cloudflare-api-key
+          #  key: api-key

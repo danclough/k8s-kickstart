@@ -1,19 +1,15 @@
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
   name: example-com
-  namespace: default
+  namespace: example
 spec:
   secretName: example-com-tls
   issuerRef:
+    # If using a ClusterIssuer, uncomment this
+    #kind: ClusterIssuer
     name: letsencrypt-staging
-  commonName: '*.example.com'
   dnsNames:
+  - '*.example.com'
   - example.com
-  acme:
-    config:
-    - dns01:
-        provider: cf-dns
-      domains:
-      - '*.example.com'
-      - example.com
+  - foo.com

@@ -35,6 +35,11 @@ If needed, modify the `01-custom-resources.yaml` to change the `blockSize` (size
 kubectl apply -f 01-calico/01-custom-resources.yaml
 ```
 
+Validate Calico was installed successfully - the control plane node will show "Ready".
+```
+kubectl get nodes -o wide
+```
+
 ### Join Additional Control Plane Nodes
 Use the previous `kubeadm join` command to join the remaining control plane nodes to the cluster.  The appropriate command to use is the one that contains the `--control-plane` and `--certificate-key` flags.
 

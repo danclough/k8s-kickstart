@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: private-ca-issuer
+  namespace: example
+spec:
+  ca:
+    secretName: private-ca-key-pair
