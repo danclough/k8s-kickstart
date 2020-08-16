@@ -1,6 +1,6 @@
 # Bootstrapping your cluster
 
-Provision 3 nodes on Debian 9.
+You will need at least one server running Debian 9 to serve as the control plane node, and zero or more servers for the worker nodes that run pods.  Your control plane node can also run pods if you tell it to, but for production environments, it's generally not advised.
 
 **Note:** There is a known issue with Debian 10 ("buster") where pods are unable to communicate with each other across nodes.  This is due to an incompatability with kube-proxy and Debian's decision to make iptables a wrapper for nftables.  This is *supposedly* accounted for in K8s versions 1.18 and up, but I still have issues with Debian 10 as of 1.19.
 

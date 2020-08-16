@@ -45,3 +45,6 @@ Ingress controllers like Traefik can also handle security policies like permitti
 [cert-manager](https://cert-manager.io/) is an automation tool that generates and manages TLS certificates for Kubernetes services.
 
 Serving HTTPS traffic requires a valid certificate on the server - in this case, the reverse proxy that sits in front of your services.  Rather than requesting these manually and constantly updating them as the certificates expire, cert-manager will automatically generate a certificate signing request (CSR) and fulfill it using a number of possible providers - including Let's Encrypt, HashiCorp Vault, or even your own private CA.  cert-manager will even take care of renewing each certificate before it expires!
+
+## Getting Started
+Continue to [Step 1 - kubeadm and Calico](../01-kubeadm-calico/) to get started!

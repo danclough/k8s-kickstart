@@ -1,31 +1,25 @@
 # Rook Ceph Cluster - Cloud-native Storage
 ## Install
-The instructions provided below will only create a bare minimum MetalLB deployment using Layer 2 mechanisms to announce IPs.  Complete installation instructions can be found in the [MetalLB installation docs](https://metallb.universe.tf/installation/)
+The instructions provided below assume that your Kubernetes nodes have extra hard drives available at a path like `/dev/sdb`.  Present more disks to your VM or physical host if needed.  If no free disks are found, the cluster will still be created but will not have any storage available.
 
-1. Install MetalLB using the latest manifests.  Replace `main` with a specific version tag if desired.
+1. Install common resources and the Rook operator using the latest manifests.  Replace `master` with a specific version tag if desired.
 ```
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/main/manifests/namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/main/manifests/metallb.yaml
-# On first install only
-kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/common.yaml
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/operator.yaml
 ```
 
 ## Configure
-2. Modify the included `config.yaml` file.  Set the `ip_range_begin` and `ip_range_end` according to the range of IPs MetalLB should assign from.
+2. Modify the included `cluster.yaml` file.  In the `storage` section, adjust the `deviceFilter` if needed to include the devices that Rook should use for Ceph storage.
 ```
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: metallb-system
-  name: config
-data:
-  config: |
-    address-pools:
-    - name: default
-      protocol: layer2
-      addresses:
-      - <ip_range_begin>-<ip_range-end>
+  storage: # cluster level storage configuration and selection
+    useAllNodes: true
+    useAllDevices: false
+    deviceFilter: ^sd.
 ```
 
+3. Create the Rook Ceph cluster using `kubectl apply -f cluster.yaml` and watch as Rook creates new pods on each node to detect and prepare the storage devices as Ceph OSDs.
+
+**Note:** Rook will not format a drive for Ceph if it finds an existing partition or filesystem.  Make sure any disks you want to use are blank.
+
 ## Next Step
-Continue to [Step 3 - Rook Ceph Storage](../03-rook-ceph/)
+Continue to [Step 4 - Traefik](../04-traefik/)
