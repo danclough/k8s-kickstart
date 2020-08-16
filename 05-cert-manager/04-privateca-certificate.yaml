@@ -14,6 +14,9 @@ spec:
   # discouraged from being used.
   commonName: example.com
   isCA: false
+  # Allowed keysizes
+  # RSA = 2048-8192
+  # ECDSA = 256,384,521
   keySize: 256
   keyAlgorithm: ecdsa
   keyEncoding: pkcs1

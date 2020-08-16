@@ -1,53 +1,47 @@
-# Bootstrapping your cluster
+# Kubernetes Kickstart
+This repo contains instructions and examples to construct a bare-metal Kubernetes (often abbreviated `k8s`) cluster from the ground-up.  At the end of this guide, you will have a fully-functional Kubernetes cluster at your disposal.
 
-Provision 3 nodes on Debian 9.
+This guide is *not* the easiest way to satisfy that objective.  Other wonderful projects like [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) and [Rancher k3s](https://k3s.io/) will get you there faster and with significantly less work!
 
-**Note:** There is a known issue with Debian 10 ("buster") where pods are unable to communicate with each other across nodes.  This is due to an incompatability with kube-proxy and Debian's decision to make iptables a wrapper for nftables.  This is *supposedly* accounted for in K8s versions 1.18 and up, but I still have issues with Debian 10 as of 1.19.
+Minikube is an official Kubernetes project, and will almost instantly give you a full single-node Kubernetes environment to play around or develop in.  `k3s` is a Kubernetes platform developed by Rancher, a company that sells commercial Kubernetes distributions and support.  `k3s` is a "slimmed-down-but-functionally-identical" Kubernetes distribution designed to run in environments with very few resources compared to a full-fat Kubernetes installation.  Both solutions simplify the process considerably by doing all the lifting for you.
 
-## Control Plane
+## But Why?
+As someone who has never worked with Kubernetes in a meaningful way, getting started was very difficult.  All the documentation *is* freely available - but with a subject as deep as Kubernetes, moving from concept to reality was quite a leap.  Some learn by reading, some by seeing, and others by *doing*.  If you are a hands-on learner like me, you may agree that the best way for you to conceptualize a new concept is to get your hands dirty.
 
-### Initialize Cluster
-Use kubeadm to provision the first control plane node.  Replace the CIDR ranges, cluster_name and load_balancer with actual values.
-```
-sudo kubeadm init --pod-network-cidr=10.x.0.0/16 --pod-network-cidr=10.y.0.0/16 --service-dns-domain "<cluster_name>.local" --control-plane-endpoint "<load_balancer>:6443" --upload-certs
-```
+While Kubernetes as a general concept is easy to explain, basic explanations don't do it justice.  Saying that Kubernetes is a "cluster for containers" is like describing a submarine as "a boat that sinks on purpose" - technically true, but miles away from real understanding.
 
-Save the `kubeadm join` commands somewhere safe so they can be used later to join the other control plane nodes and any worker nodes.
+Even though you can stand up a standards-conforming Kubernetes environment at the push of a button with Minikube or `k3s`, automating this process away deprives you of the ability to see for yourself how all the pieces stack up.
 
-#### Gather kubectl config
-Run these steps on the first control plane node to setup kubectl for your non-root user.
-```
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-```
+## How?
+As a Kubernetes novice myself, I will walk you through standing up a bare-metal Kubernetes cluster.
 
-Copy the `.kube/config` file to your local workstation so you can run kubectl commands locally against the files in this repo.
+## Components
+Because almost every component of Kubernetes is interchangeable, choosing to build a cluster from scratch requires making a number of sometimes non-trivial decisions - what to use for networking?  For load balancing?  Storage?  Decision paralysis abounds.  Sometimes you just need a blueprint!
 
-#### Install Calico networking subsystem
-From the `01-calico` directory, install the Tigera Calico operator and CRDs.
-```
-kubectl apply -f 01-calico/00-tigera-operator.yaml
-```
+### kubeadm
+```kubeadm``` is the official Kubernetes tool for quickly creating and expanding clusters.  The [kubeadm Reference Page](https://kubernetes.io/docs/reference/setup-tools/kubeadm/)] is an excellent place to start to learn more about kubeadm's features and options.
 
-If needed, modify the `01-custom-resources.yaml` to change the `blockSize` (size of pod IP range assigned to each node) and `cidr` (not necessary if you passed `--pod-network-cidr` in the `kubeadm init` command).  Apply the Calico config.
-```
-kubectl apply -f 01-calico/01-custom-resources.yaml
-```
+### Calico
+[Calico](https://www.projectcalico.org/) is a networking solution for containers.  Calico is a cross-platform project that serves many other platforms besides Kubernetes, like Docker EE, OpenShift, and even bare-metal.  Calico provides essential network functions like routing and security policies between pods in a Kubernetes cluster and to the outside world.
 
-Validate Calico was installed successfully - the control plane node will show "Ready".
-```
-kubectl get nodes -o wide
-```
+### MetalLB
+[MetalLB](https://metallb.universe.tf/) is a load-balancer implementation for bare metal Kubernetes clusters, using standard routing protocols.  Public clouds have their own load balancer service that can be called by Kubernetes to assign external IPs to any service that requests one.  Bare-metal clusters don't have this luxury and often require expensive alternatives like a hardware load balancer appliance which can become a "single point of failure".
 
-### Join Additional Control Plane Nodes
-Use the previous `kubeadm join` command to join the remaining control plane nodes to the cluster.  The appropriate command to use is the one that contains the `--control-plane` and `--certificate-key` flags.
+MetalLB solves this problem by implementing a virtual IP address pool on top of Kubernetes, using standard protocls like ARP or BGP to announce the IPs to the rest of the network.
 
-### Untaint Control Plane Nodes
-If your control plane nodes will run pods, untaint them now.
-```
-kubectl taint nodes --all node-role.kubernetes.io/master-
-```
+### Rook
+[Rook](https://rook.io/) is a Kubernetes-based storage platform.  Rook takes existing storage platforms like Ceph or NFS and wraps them in a management layer that dynamically provisions a storage cluster on top of Kubernetes, using storage devices attached to the Kubernetes nodes themselves.
 
-## Worker Nodes
-For any other nodes not intended to be control plane nodes, use the other `kubeadm join` command that does not contain the `--control-plane` flag.
+*Hyperconverged* means something that is local to the cluster and is pooled together and managed by the platform.  Companies like VMware and Nutanix offer hyperconverged storage platforms by combining the local storage across all their servers into a virtual pool, with redundancy baked in at the software level.
+
+### Traefik
+[Traefik](https://traefik.io/) is a modern HTTP reverse proxy and load balancer made to deploy microservices with ease.
+
+While it is possible for every Kubernetes service to answer requests directly, this can become hard to manage very quickly.  Many Kubernetes cluster operators will use an *Ingress Controller* like Traefik, nginx, or HAProxy to intercept incoming requests and route them to the appropriate Kubernetes service.
+
+Ingress controllers like Traefik can also handle security policies like permitting or denying certain IP ranges, enforcing HTTPS on certain URLs, and even offloading TLS so the containers behind each service don't need to handle TLS encryption themselves.
+
+### cert-manager
+[cert-manager](https://cert-manager.io/) is an automation tool that generates and manages TLS certificates for Kubernetes services.
+
+Serving HTTPS traffic requires a valid certificate on the server - in this case, the reverse proxy that sits in front of your services.  Rather than requesting these manually and constantly updating them as the certificates expire, cert-manager will automatically generate a certificate signing request (CSR) and fulfill it using a number of possible providers - including Let's Encrypt, HashiCorp Vault, or even your own private CA.  cert-manager will even take care of renewing each certificate before it expires!
