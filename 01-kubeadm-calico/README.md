@@ -27,12 +27,12 @@ Copy the `.kube/config` file to your local workstation so you can run kubectl co
 #### Install Calico networking subsystem
 3. From the `01-calico` directory, install the Tigera Calico operator and CRDs.
 ```
-kubectl apply -f 01-calico/00-tigera-operator.yaml
+kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
 ```
 
-4. If needed, modify the `01-custom-resources.yaml` to change the `blockSize` (size of pod IP range assigned to each node) and `cidr` (not necessary if you passed `--pod-network-cidr` in the `kubeadm init` command).  Apply the Calico config.
+4. If needed, modify the `custom-resources.yaml` to change the `blockSize` (size of pod IP range assigned to each node) and `cidr` (not necessary if you passed `--pod-network-cidr` in the `kubeadm init` command).  Apply the Calico config.
 ```
-kubectl apply -f 01-calico/01-custom-resources.yaml
+kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
 ```
 
 5. Validate Calico was installed successfully - the control plane node will show "Ready".
